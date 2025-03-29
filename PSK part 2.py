@@ -25,7 +25,7 @@ for m in modulation_orders:
     data.append([m, bits_per_symbol, baud_rate, effective_throughput, snr_requirement, bandwidth_required])
 
 # Create DataFrame
-df = pd.DataFrame(data, columns=["Modulation Order", "Bits per Symbol", "Baud Rate (Hz)","Effective Throughput (bps)", "SNR Requirement (dB)", "Bandwidth Required (Hz)"])
+df = pd.DataFrame(data, columns=["Modulation Order", "Bits per Symbol", "Baud Rate (symbols/s)","Effective Throughput (bps)", "SNR Requirement (dB)", "Bandwidth Required (Hz)"])
 
 # Display Table
 print(df)
@@ -33,7 +33,7 @@ print(df)
 # Plot Results
 fig, ax1 = plt.subplots(figsize=(10, 5))
 ax2 = ax1.twinx()
-ax1.plot(df["Modulation Order"], df["Baud Rate (Hz)"], 'g-o', label='Baud Rate')
+ax1.plot(df["Modulation Order"], df["Baud Rate (symbols/s)"], 'g-o', label='Baud Rate')
 ax1.plot(df["Modulation Order"], df["Bandwidth Required (Hz)"], 'b-s', label='Bandwidth Required')
 ax2.plot(df["Modulation Order"], df["SNR Requirement (dB)"], 'r-d', label='SNR Requirement')
 
