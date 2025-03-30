@@ -1,0 +1,24 @@
+import math
+from scipy.special import erfcinv
+
+def Qinv(x):
+    """
+    Compute the inverse Q-function:
+    Q^{-1}(x) = sqrt(2) * erfcinv(2*x)
+    """
+    return math.sqrt(2) * erfcinv(2 * x)
+
+# Example computation using SER = 1e-3 and M = 16-QAM
+M = 2  # Modulation Order (you can change this)
+SER = 1e-3  # Symbol Error Rate
+
+# Compute denominator: 4(1 - 1/sqrt(M))
+denom = 4 * (1 - (1 / math.sqrt(M)))
+
+# Compute argument for Q-inverse
+argument = SER / denom
+
+# Compute Q-inverse value
+q_inv_result = Qinv(argument)
+
+print(f"Q^-1({argument}) ≈ {q_inv_result:.2f}")
