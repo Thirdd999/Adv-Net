@@ -1,29 +1,56 @@
-import math 
+import math
+from scipy.special import erfcinv
+from tabulate import tabulate  # Import for table formatting
 
-target_data_rate = 100.00 #Mbps 
-mod_orders = [2, 8, 16, 64, 512, 1024, 2048, 4096] 
+def Qinv(x):
+    """
+    Compute the inverse Q-function:
+    Q^{-1}(x) = sqrt(2) * erfcinv(2*x)
+    """
+    return math.sqrt(2) * erfcinv(2 * x)
+
+# Parameters
+target_data_rate = 100.00e6  # Mbps
+target_SER = 1e-3  # Target symbol error rate
+mod_orders = [2, 8, 16, 64, 512, 1024, 2048, 4096]  # QAM Modulation orders
+operating_SNR_dB = 20  # Assumed operating SNR in dB
+
 results = []
-for M in mod_orders: 
-    bits = math.log2(M)
-    baud_rate = target_data_rate / bits 
-    snr_req = bits + 5
-    operating_SNR = 20 
-    if operating_SNR < snr_req: 
-        effective_throughput = target_data_rate * (operating_SNR / snr_req)
-    else: 
-        effective_throughput = target_data_rate
 
-    bandwidth_req = target_data_rate / bits 
-    results.append({
-        "Modulation Order": M,
-        "Bits per Symbol": bits, 
-        "Baud Rate": baud_rate, 
-        "SNR Requirement (dB)": snr_req, 
-        "Bandwidth Required (MHz)": bandwidth_req,
-        "Effective Throughput (Mbps)": effective_throughput            
+for M in mod_orders:
+    bits_per_symbol = math.log2(M)  # Bits per symbol
+    baud_rate = target_data_rate / bits_per_symbol  # Symbol rate in Msps
 
+    # Compute QAM SNR requirement
+    denom_qam = 4 * (1 - 1 / math.sqrt(M))
+    argument_qam = target_SER / denom_qam
 
-      })
-    
-for res in results: 
-    print(res)
+    try:
+        q_inv_qam = Qinv(argument_qam)
+    except Exception:
+        q_inv_qam = float('nan')
+
+    snr_linear_qam = ((M - 1) / 3) * (q_inv_qam ** 2)
+    snr_dB_qam = 10 * math.log10(snr_linear_qam) if snr_linear_qam > 0 else float('nan')
+
+    # Compute Effective Throughput for QAM
+    if operating_SNR_dB < snr_dB_qam:
+        effective_throughput_qam = target_data_rate * (operating_SNR_dB / snr_dB_qam)
+    else:
+        effective_throughput_qam = target_data_rate
+
+    # Bandwidth Requirement (assuming symbol rate is proportional to bandwidth)
+    bandwidth_req = baud_rate  # MHz (assuming Nyquist criterion)
+
+    results.append([
+        M,
+        bits_per_symbol,
+        f"{baud_rate / 1e6:.2f} Msps",
+        f"{snr_dB_qam:.2f} dB",
+        f"{bandwidth_req / 1e6:.2f} MHz",
+        f"{effective_throughput_qam / 1e6:.2f} Mbps"
+    ])
+
+# Print results in table format
+headers = ["Modulation Order", "Bits per Symbol", "Baud Rate", "SNR Req (dB)", "Bandwidth Req", "Effective Throughput"]
+print(tabulate(results, headers=headers, tablefmt="fancy_grid"))
